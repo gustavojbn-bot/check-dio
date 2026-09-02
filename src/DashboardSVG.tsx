@@ -3,6 +3,8 @@ import { MapaSPSVG } from './components/MapaSPSVG';
 import { useAeroportosFromBD } from './hooks/useAeroportosFromBD';
 import { PainelComAbas } from '@/components/PainelComAbas';
 import { EmConstrucao } from '@/components/EmConstrucao';
+import { MapaHeader } from '@/components/MapaHeader';
+import { LegendaMetar } from '@/components/LegendaMetar';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface DashboardSVGProps {
@@ -56,16 +58,25 @@ export default function DashboardSVG({ activeTab, activeMenuItem }: DashboardSVG
         <div style={{
           flex: 1,
           display: 'flex',
+          flexDirection: 'column',
           position: 'relative',
           overflow: 'hidden',
           backgroundColor: '#1a1f2e',
         }}>
           {isPainelOperacao ? (
-            <MapaSPSVG
-              aeroportos={aeroportos}
-              onSelectAeroporto={handleSelectAeroporto}
-              isLoading={aeroportosLoading}
-            />
+            <>
+              <MapaHeader />
+              <div style={{ width: '100%', aspectRatio: '1798 / 875', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+                <MapaSPSVG
+                  aeroportos={aeroportos}
+                  onSelectAeroporto={handleSelectAeroporto}
+                  isLoading={aeroportosLoading}
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center', padding: isMobile ? '8px 8px' : '12px' }}>
+                <LegendaMetar />
+              </div>
+            </>
           ) : (
             <EmConstrucao label={activeMenuItem ?? ''} />
           )}

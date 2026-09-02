@@ -8,7 +8,6 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useMetarRotaer, getMetarColor } from "@/hooks/useMetarRotaer";
-import { LegendaMetar } from "./LegendaMetar";
 
 interface Aeroporto {
   id: string;
@@ -120,7 +119,7 @@ export function MapaSPSVG({
         overflow: "visible",
         backgroundColor: "#0f0f1e",
         display: "flex",
-        alignItems: "center",
+        alignItems: "flex-start",
         justifyContent: "center",
       }}
     >
@@ -178,18 +177,6 @@ export function MapaSPSVG({
             </div>
           );
         })}
-      </div>
-
-      <div
-        style={{
-          position: "absolute",
-          bottom: 4,
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 60,
-        }}
-      >
-        <LegendaMetar />
       </div>
 
       {!isLoading && aeroportos.length === 0 && (
