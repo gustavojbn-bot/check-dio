@@ -410,10 +410,13 @@ function AbaNovoUsuario({ onCriado }: { onCriado: () => void }) {
     setEnviando(true);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      // Força a renovação do token antes de enviar: se o formulário ficou aberto
+      // por um tempo (aba em segundo plano, etc.), o access_token em cache pode
+      // já estar expirado mesmo com uma sessão (refresh_token) ainda válida.
+      const { data: sessionData, error: refreshError } = await supabase.auth.refreshSession();
       const accessToken = sessionData.session?.access_token;
 
-      if (!accessToken) {
+      if (refreshError || !accessToken) {
         setErro('Sessão expirada. Faça login novamente.');
         setEnviando(false);
         return;
