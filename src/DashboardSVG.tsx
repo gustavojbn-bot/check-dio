@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { MapaSPSVG } from './components/MapaSPSVG';
 import { useAeroportosFromBD, useRegionaisDisponiveis } from './hooks/useAeroportosFromBD';
 import { PainelComAbas } from '@/components/PainelComAbas';
 import { EmConstrucao } from '@/components/EmConstrucao';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface DashboardSVGProps {
   activeTab?: 'operacao' | 'engenharia';
@@ -13,17 +14,26 @@ export default function DashboardSVG({ activeTab, activeMenuItem }: DashboardSVG
   console.log('%c🟢 DashboardSVG renderizado', 'color: lime; font-weight: bold');
 
   const isPainelOperacao = activeTab === 'operacao' && activeMenuItem === 'Painel';
+  const isMobile = useIsMobile();
 
   const [filtro, setFiltro] = useState<'todos' | 'VOA-SP' | 'VOA-SE'>('todos');
   const [busca, setBusca] = useState('');
   const [regionalFilter, setRegionalFilter] = useState<string>('todas');
   const [selectedAeroporto, setSelectedAeroporto] = useState<any>(null);
-  const [painelAberto, setPainelAberto] = useState(true);
+  const [painelAberto, setPainelAberto] = useState(!isMobile);
+
+  // No mobile o painel vira um drawer off-canvas: fecha ao entrar em mobile,
+  // reabre (modo fixo/lateral) ao voltar para desktop.
+  useEffect(() => {
+    setPainelAberto(!isMobile);
+  }, [isMobile]);
 
   // Logging do estado quando muda
   const handleSelectAeroporto = (aeroporto: any) => {
     console.log('%c📍 DashboardSVG: setSelectedAeroporto chamado com:', 'color: #06b6d4; font-weight: bold', aeroporto);
     setSelectedAeroporto(aeroporto);
+    // No mobile, abre o painel automaticamente ao selecionar um aeroporto no mapa
+    if (isMobile) setPainelAberto(true);
   };
 
   // Busca dados dos aeroportos
@@ -88,18 +98,35 @@ export default function DashboardSVG({ activeTab, activeMenuItem }: DashboardSVG
           )}
         </div>
 
-        {/* RIGHT - PANEL (340px, recolhível) */}
+        {/* RIGHT - PANEL (340px, recolhível / drawer no mobile) */}
         <div style={{ position: 'relative', height: '100%' }}>
+          {/* Fundo escurecido atrás do drawer, só no mobile com painel aberto */}
+          {isMobile && painelAberto && (
+            <div
+              onClick={() => setPainelAberto(false)}
+              style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.6)', zIndex: 130 }}
+            />
+          )}
+
           <div style={{
-            width: painelAberto ? '340px' : '0px',
+            width: isMobile ? 'min(340px, 88vw)' : (painelAberto ? '340px' : '0px'),
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
             backgroundColor: '#1e293b',
-            borderLeft: painelAberto ? '1px solid #2d3e50' : 'none',
+            borderLeft: !isMobile && painelAberto ? '1px solid #2d3e50' : 'none',
             overflow: 'auto',
             boxShadow: painelAberto ? '-2px 0 8px rgba(0, 0, 0, 0.5)' : 'none',
-            transition: 'width 0.3s ease',
+            transition: isMobile ? 'transform 0.3s ease' : 'width 0.3s ease',
+            ...(isMobile
+              ? {
+                  position: 'fixed' as const,
+                  top: 0,
+                  right: 0,
+                  zIndex: 140,
+                  transform: painelAberto ? 'translateX(0)' : 'translateX(100%)',
+                }
+              : {}),
           }}>
             {isPainelOperacao ? (
               <PainelComAbas
@@ -110,39 +137,69 @@ export default function DashboardSVG({ activeTab, activeMenuItem }: DashboardSVG
             )}
           </div>
 
-          {/* Botão de fechar/abrir na borda lateral do painel */}
-          <button
-            onClick={() => setPainelAberto((v) => !v)}
-            title="Fechar/Expandir Painel"
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: 0,
-              transform: 'translate(-50%, -50%)',
-              width: 20,
-              height: 36,
-              borderRadius: 6,
-              border: '1px solid #2d3e50',
-              backgroundColor: '#1e293b',
-              color: '#94a3b8',
-              cursor: 'pointer',
-              fontSize: 11,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'background-color 0.2s ease',
-              zIndex: 30,
-              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.4)',
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = '#2d3e50';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = '#1e293b';
-            }}
-          >
-            {painelAberto ? '▶' : '◀'}
-          </button>
+          {/* Botão de fechar/abrir na borda lateral do painel (apenas desktop) */}
+          {!isMobile && (
+            <button
+              onClick={() => setPainelAberto((v) => !v)}
+              title="Fechar/Expandir Painel"
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: 0,
+                transform: 'translate(-50%, -50%)',
+                width: 20,
+                height: 36,
+                borderRadius: 6,
+                border: '1px solid #2d3e50',
+                backgroundColor: '#1e293b',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                fontSize: 11,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background-color 0.2s ease',
+                zIndex: 30,
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.4)',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor = '#2d3e50';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor = '#1e293b';
+              }}
+            >
+              {painelAberto ? '▶' : '◀'}
+            </button>
+          )}
+
+          {/* Botão flutuante para reabrir o painel no mobile */}
+          {isMobile && !painelAberto && isPainelOperacao && (
+            <button
+              onClick={() => setPainelAberto(true)}
+              title="Abrir painel de ocorrências"
+              style={{
+                position: 'fixed',
+                top: 78,
+                right: 12,
+                width: 40,
+                height: 40,
+                borderRadius: 8,
+                border: '1px solid #2d3e50',
+                backgroundColor: '#1e293b',
+                color: '#e2e8f0',
+                cursor: 'pointer',
+                fontSize: 16,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 110,
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.4)',
+              }}
+            >
+              📋
+            </button>
+          )}
         </div>
       </div>
 
@@ -155,7 +212,7 @@ export default function DashboardSVG({ activeTab, activeMenuItem }: DashboardSVG
         color: '#94a3b8',
         fontSize: '12px',
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr 1fr',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',
         gap: '12px',
       }}>
         {/* Concessão Filter */}

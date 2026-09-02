@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface HeaderProps {
   activeTab: 'operacao' | 'engenharia';
@@ -45,6 +46,7 @@ const NIVEL_LABEL: Record<string, string> = {
 
 export function Header({ activeTab, activeMenuItem }: HeaderProps) {
   const { perfil, nivelAcesso, signOut } = useAuth();
+  const isMobile = useIsMobile();
   const [time, setTime] = useState<string>('00:00:00');
   const [date, setDate] = useState<string>('');
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
@@ -94,50 +96,53 @@ export function Header({ activeTab, activeMenuItem }: HeaderProps) {
   return (
     <header
       style={{
-        height: 70,
+        height: isMobile ? 56 : 70,
         backgroundColor: '#0f0f1e',
         borderBottom: '2px solid #06b6d4',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 20px',
+        padding: isMobile ? '0 12px' : '0 20px',
         position: 'relative',
         backdropFilter: 'blur(10px)',
       }}
     >
       {/* LEFT SECTION - Check DIO Logo (já traz o nome/texto embutido na imagem) */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
         <img
           src="/Logo-checkdio-3d.png"
           alt="Check DIO - Rede VOA - Departamento de Infraestrutura e Operações"
           style={{
-            height: 66,
+            height: isMobile ? 38 : 66,
             width: 'auto',
             objectFit: 'contain',
+            flexShrink: 0,
           }}
         />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#cbd5e1',
-            }}
-          >
-            SISTEMA DE GESTÃO DEPTO INFRAESTRUTURA E OPERAÇÕES (DIO)
-          </div>
+        {!isMobile && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: '#cbd5e1',
+              }}
+            >
+              SISTEMA DE GESTÃO DEPTO INFRAESTRUTURA E OPERAÇÕES (DIO)
+            </div>
 
-          <div
-            style={{
-              fontSize: 12,
-              color: '#64748b',
-              fontWeight: 500,
-            }}
-          >
-            {subtitle}
+            <div
+              style={{
+                fontSize: 12,
+                color: '#64748b',
+                fontWeight: 500,
+              }}
+            >
+              {subtitle}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* RIGHT SECTION - Online Status + Clock & Date */}
@@ -145,11 +150,12 @@ export function Header({ activeTab, activeMenuItem }: HeaderProps) {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 16,
+          gap: isMobile ? 8 : 16,
+          flexShrink: 0,
         }}
       >
         {/* Usuário logado + nível de acesso */}
-        {perfil && (
+        {!isMobile && perfil && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
             <span style={{ fontSize: 12, color: '#cbd5e1', fontWeight: 600 }}>{perfil.nome}</span>
             <span style={{ fontSize: 10, color: '#64748b' }}>
@@ -162,12 +168,12 @@ export function Header({ activeTab, activeMenuItem }: HeaderProps) {
           onClick={() => signOut()}
           title="Sair"
           style={{
-            padding: '6px 10px',
+            padding: isMobile ? '5px 8px' : '6px 10px',
             borderRadius: 6,
             border: '1px solid #2d3e50',
             backgroundColor: 'transparent',
             color: '#94a3b8',
-            fontSize: 11,
+            fontSize: isMobile ? 10 : 11,
             fontWeight: 600,
             cursor: 'pointer',
           }}
@@ -176,22 +182,24 @@ export function Header({ activeTab, activeMenuItem }: HeaderProps) {
         </button>
 
         {/* Status de conexão com a internet - estático (verde=online, vermelho=offline) */}
-        <div
-          title={isOnline ? 'Online' : 'Offline'}
-          style={{
-            width: 11,
-            height: 11,
-            borderRadius: '50%',
-            backgroundColor: isOnline ? '#22c55e' : '#ef4444',
-            border: isOnline ? '1px solid rgba(34, 197, 94, 0.5)' : '1px solid rgba(239, 68, 68, 0.5)',
-          }}
-        />
+        {!isMobile && (
+          <div
+            title={isOnline ? 'Online' : 'Offline'}
+            style={{
+              width: 11,
+              height: 11,
+              borderRadius: '50%',
+              backgroundColor: isOnline ? '#22c55e' : '#ef4444',
+              border: isOnline ? '1px solid rgba(34, 197, 94, 0.5)' : '1px solid rgba(239, 68, 68, 0.5)',
+            }}
+          />
+        )}
 
         {/* Clock & Date Container */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-end' }}>
           <div
             style={{
-              fontSize: 26,
+              fontSize: isMobile ? 15 : 26,
               fontWeight: 700,
               color: '#06b6d4',
               fontFamily: 'monospace',
@@ -201,16 +209,18 @@ export function Header({ activeTab, activeMenuItem }: HeaderProps) {
             {time}
           </div>
 
-          <div
-            style={{
-              fontSize: 11,
-              color: '#64748b',
-              fontWeight: 500,
-              textTransform: 'capitalize',
-            }}
-          >
-            {date}
-          </div>
+          {!isMobile && (
+            <div
+              style={{
+                fontSize: 11,
+                color: '#64748b',
+                fontWeight: 500,
+                textTransform: 'capitalize',
+              }}
+            >
+              {date}
+            </div>
+          )}
         </div>
       </div>
     </header>

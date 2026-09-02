@@ -1,6 +1,7 @@
-import { useState, useMemo, type ReactNode } from 'react';
+import { useState, useMemo, useEffect, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { GestaoUsuarios } from './GestaoUsuarios';
 
 const MENU_ITEMS = {
@@ -75,17 +76,25 @@ interface MenuProps {
 export function Menu({ onMenuSelect, onMenuToggle }: MenuProps) {
   const queryClient = useQueryClient();
   const { nivelAcesso } = useAuth();
-  const [isOpen, setIsOpen] = useState(true);
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(!isMobile);
   const [gestaoUsuariosAberta, setGestaoUsuariosAberta] = useState(false);
   const [activeTab, setActiveTab] = useState<'operacao' | 'engenharia'>('operacao');
   const [activeItem, setActiveItem] = useState<string>(MENU_ITEMS.operacao[0]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // No mobile o menu vira um drawer off-canvas: fecha ao entrar em mobile,
+  // reabre (modo fixo/lateral) ao voltar para desktop.
+  useEffect(() => {
+    setIsOpen(!isMobile);
+  }, [isMobile]);
 
   const menuItems = useMemo(() => MENU_ITEMS[activeTab], [activeTab]);
 
   const handleMenuSelect = (item: string) => {
     setActiveItem(item);
     onMenuSelect?.(activeTab, item);
+    if (isMobile) setIsOpen(false);
   };
 
   const handleMenuToggle = () => {
@@ -121,16 +130,67 @@ export function Menu({ onMenuSelect, onMenuToggle }: MenuProps) {
 
   return (
     <div style={{ position: 'relative', height: '100%' }}>
+      {/* Fundo escurecido atrás do drawer, só no mobile com menu aberto */}
+      {isMobile && isOpen && (
+        <div
+          onClick={handleMenuToggle}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            zIndex: 150,
+          }}
+        />
+      )}
+
+      {/* Botão hambúrguer flutuante para reabrir o menu no mobile */}
+      {isMobile && !isOpen && (
+        <button
+          onClick={handleMenuToggle}
+          title="Abrir menu"
+          style={{
+            position: 'fixed',
+            top: 78,
+            left: 12,
+            width: 40,
+            height: 40,
+            borderRadius: 8,
+            border: '1px solid #2d3e50',
+            backgroundColor: '#1e293b',
+            color: '#e2e8f0',
+            cursor: 'pointer',
+            fontSize: 18,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 120,
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.4)',
+          }}
+        >
+          ☰
+        </button>
+      )}
+
       <div
         style={{
-          width: isOpen ? 280 : 60,
+          width: isMobile ? 280 : (isOpen ? 280 : 60),
           height: '100%',
           backgroundColor: '#1e293b',
           borderRight: '1px solid #2d3e50',
           display: 'flex',
           flexDirection: 'column',
-          transition: 'width 0.3s ease',
+          transition: isMobile ? 'transform 0.3s ease' : 'width 0.3s ease',
           overflow: 'hidden',
+          ...(isMobile
+            ? {
+                position: 'fixed' as const,
+                top: 0,
+                left: 0,
+                zIndex: 160,
+                transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
+                boxShadow: isOpen ? '4px 0 16px rgba(0, 0, 0, 0.5)' : 'none',
+              }
+            : {}),
         }}
       >
       {/* ==================== BOTÕES: REFRESH | ALERTAS | CONFIGURAÇÕES | USUÁRIOS ==================== */}
@@ -300,39 +360,41 @@ export function Menu({ onMenuSelect, onMenuToggle }: MenuProps) {
       `}</style>
       </div>
 
-      {/* Botão de fechar/abrir na borda lateral do menu */}
-      <button
-        onClick={handleMenuToggle}
-        title="Fechar/Expandir Menu"
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: isOpen ? 280 : 60,
-          transform: 'translate(-50%, -50%)',
-          width: 20,
-          height: 36,
-          borderRadius: 6,
-          border: '1px solid #2d3e50',
-          backgroundColor: '#1e293b',
-          color: '#94a3b8',
-          cursor: 'pointer',
-          fontSize: 11,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'left 0.3s ease, background-color 0.2s ease',
-          zIndex: 30,
-          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.4)',
-        }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.backgroundColor = '#2d3e50';
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLElement).style.backgroundColor = '#1e293b';
-        }}
-      >
-        {isOpen ? '◀' : '▶'}
-      </button>
+      {/* Botão de fechar/abrir na borda lateral do menu (apenas desktop) */}
+      {!isMobile && (
+        <button
+          onClick={handleMenuToggle}
+          title="Fechar/Expandir Menu"
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: isOpen ? 280 : 60,
+            transform: 'translate(-50%, -50%)',
+            width: 20,
+            height: 36,
+            borderRadius: 6,
+            border: '1px solid #2d3e50',
+            backgroundColor: '#1e293b',
+            color: '#94a3b8',
+            cursor: 'pointer',
+            fontSize: 11,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'left 0.3s ease, background-color 0.2s ease',
+            zIndex: 30,
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.4)',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.backgroundColor = '#2d3e50';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.backgroundColor = '#1e293b';
+          }}
+        >
+          {isOpen ? '◀' : '▶'}
+        </button>
+      )}
     </div>
   );
 }
