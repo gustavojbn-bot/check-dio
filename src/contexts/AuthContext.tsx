@@ -16,6 +16,7 @@ interface AuthContextValue {
   podeExcluir: boolean;
   signIn: (email: string, senha: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  alterarSenha: (novaSenha: string) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -80,6 +81,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const alterarSenha = async (novaSenha: string) => {
+    const { error: authError } = await supabase.auth.updateUser({ password: novaSenha });
+    if (authError) {
+      return { error: traduzErroSenha(authError.message) };
+    }
+
+    if (session?.user) {
+      const { error: perfilError } = await supabase
+        .from('perfis')
+        .update({ senha_provisoria: false })
+        .eq('id', session.user.id);
+
+      if (perfilError) {
+        console.error('%c[AuthContext] ❌ Erro ao limpar senha_provisoria:', 'color: #ef4444', perfilError);
+      } else {
+        setPerfil((atual) => (atual ? { ...atual, senha_provisoria: false } : atual));
+      }
+    }
+
+    return { error: null };
+  };
+
   const nivelAcesso = perfil?.nivel_acesso ?? null;
   const podeInserir = nivelAcesso === 'administrador' || nivelAcesso === 'operador';
   const podeEditar = nivelAcesso === 'administrador' || nivelAcesso === 'operador';
@@ -97,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     podeExcluir,
     signIn,
     signOut,
+    alterarSenha,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -118,4 +142,14 @@ function traduzErroLogin(mensagem: string): string {
     return 'E-mail ainda não confirmado.';
   }
   return 'Não foi possível entrar. Tente novamente.';
+}
+
+function traduzErroSenha(mensagem: string): string {
+  if (mensagem.includes('New password should be different')) {
+    return 'A nova senha deve ser diferente da senha atual.';
+  }
+  if (mensagem.includes('Password should be at least')) {
+    return 'A senha deve ter ao menos 6 caracteres.';
+  }
+  return 'Não foi possível alterar a senha. Tente novamente.';
 }

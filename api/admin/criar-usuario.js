@@ -61,9 +61,10 @@ export default async function handler(req, res) {
   }
 
   // Garante nome/telefone/nível corretos no perfil (a trigger cria com nível 'visualizador' por padrão)
+  // e marca senha_provisoria=true para exigir a troca no primeiro acesso do usuário.
   const { error: updateError } = await supabaseAdmin
     .from('perfis')
-    .update({ nome, telefone: telefone || null, nivel_acesso })
+    .update({ nome, telefone: telefone || null, nivel_acesso, senha_provisoria: true })
     .eq('id', novoUsuario.user.id);
 
   if (updateError) {

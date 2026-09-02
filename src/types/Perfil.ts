@@ -6,6 +6,7 @@ export interface Perfil {
   email: string;
   telefone?: string | null;
   nivel_acesso: NivelAcesso;
+  senha_provisoria?: boolean;
   criado_em?: string;
 }
 

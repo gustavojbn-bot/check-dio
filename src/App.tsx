@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Header } from '@/components/Header';
 import { Menu } from '@/components/Menu';
 import { Login } from '@/components/Login';
+import { TrocarSenhaInicial } from '@/components/TrocarSenhaInicial';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardSVG from './DashboardSVG';
 
 export default function App() {
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading, isAuthenticated, perfil } = useAuth();
 
   // Menu state - centralized in App for Header integration
   const [activeTab, setActiveTab] = useState<'operacao' | 'engenharia'>('operacao');
@@ -33,6 +34,10 @@ export default function App() {
 
   if (!isAuthenticated) {
     return <Login />;
+  }
+
+  if (perfil?.senha_provisoria) {
+    return <TrocarSenhaInicial />;
   }
 
   // Handle menu selection to update header

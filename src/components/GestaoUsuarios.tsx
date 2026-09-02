@@ -437,7 +437,9 @@ function AbaNovoUsuario({ onCriado }: { onCriado: () => void }) {
         return;
       }
 
-      setSucesso(`Usuário "${nome}" criado com sucesso!`);
+      setSucesso(
+        `Usuário "${nome}" criado com sucesso! Repasse o e-mail e a senha provisória a ele — o sistema vai pedir a troca no primeiro acesso.`
+      );
       setNome('');
       setEmail('');
       setTelefone('');
