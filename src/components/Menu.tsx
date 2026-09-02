@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useRegistrarAtualizacao } from '@/hooks/useUltimaAtualizacao';
 import { GestaoUsuarios } from './GestaoUsuarios';
 
 const MENU_ITEMS = {
@@ -75,6 +76,7 @@ interface MenuProps {
 
 export function Menu({ onMenuSelect, onMenuToggle }: MenuProps) {
   const queryClient = useQueryClient();
+  const registrarAtualizacao = useRegistrarAtualizacao();
   const { nivelAcesso } = useAuth();
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(!isMobile);
@@ -120,6 +122,7 @@ export function Menu({ onMenuSelect, onMenuToggle }: MenuProps) {
         refetchType: 'active',
       });
 
+      registrarAtualizacao();
       console.log('✅ Dados atualizados com sucesso!');
     } catch (error) {
       console.error('❌ Erro ao atualizar:', error);

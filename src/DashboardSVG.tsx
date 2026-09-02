@@ -5,6 +5,7 @@ import { PainelComAbas } from '@/components/PainelComAbas';
 import { EmConstrucao } from '@/components/EmConstrucao';
 import { MapaHeader } from '@/components/MapaHeader';
 import { LegendaMetar } from '@/components/LegendaMetar';
+import { UltimaAtualizacao } from '@/components/UltimaAtualizacao';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface DashboardSVGProps {
@@ -72,6 +73,7 @@ export default function DashboardSVG({ activeTab, activeMenuItem }: DashboardSVG
                   onSelectAeroporto={handleSelectAeroporto}
                   isLoading={aeroportosLoading}
                 />
+                <UltimaAtualizacao />
               </div>
               <div style={{ display: 'flex', justifyContent: 'center', padding: isMobile ? '8px 8px' : '12px' }}>
                 <LegendaMetar />

@@ -118,7 +118,7 @@ export function useRotaer(icao: string | null) {
     enabled: !!icao && isValidIcaoCode(icao),
     staleTime: 30 * 60 * 1000, // 30 minutos
     gcTime: 60 * 60 * 1000, // 1 hora
-    refetchInterval: 5 * 60 * 1000, // Atualiza a cada 5 minutos
+    refetchInterval: 10 * 60 * 1000, // Atualiza a cada 10 minutos
   });
 
   // Retorna estrutura esperada pelos componentes

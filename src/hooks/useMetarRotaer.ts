@@ -177,7 +177,7 @@ export function useMetarRotaer(icao: string | null) {
     enabled: !!icao && isValidIcaoCode(icao),
     staleTime: 30 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
-    refetchInterval: 5 * 60 * 1000, // Atualiza a cada 5 minutos
+    refetchInterval: 10 * 60 * 1000, // Atualiza a cada 10 minutos
   });
 
   return {

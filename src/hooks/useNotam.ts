@@ -119,7 +119,7 @@ export function useNotam(icao: string) {
     },
     enabled: isValidIcaoCode(icao),
     staleTime: 1000 * 60 * 10, // 10 minutos
-    refetchInterval: 1000 * 60 * 5, // Atualiza a cada 5 minutos
+    refetchInterval: 1000 * 60 * 10, // Atualiza a cada 10 minutos
   });
 
   return {
