@@ -4,6 +4,9 @@ import { isValidIcaoCode } from '@/lib/icao';
 
 interface RotaerData {
   pistas?: string;
+  acnPcn?: string;
+  tipoOperacao?: string;
+  papi?: string;
   frequencias?: string[];
   navAids?: string;
   iluminacao?: boolean;
@@ -88,6 +91,9 @@ export function useRotaer(icao: string | null) {
         // Extrair dados da resposta
         const rotaerData: RotaerData = {
           pistas: extractPistas(data),
+          acnPcn: extractAcnPcn(data),
+          tipoOperacao: extractTipoOperacao(data),
+          papi: extractPapi(data),
           frequencias: extractFrequencias(data),
           navAids: extractNavAids(data),
           iluminacao: extractIluminacao(data),
@@ -124,6 +130,14 @@ export function useRotaer(icao: string | null) {
 }
 
 
+// XMLParser com elementos que têm atributos retorna {"#text": "valor", "@_attr": "..."}
+// Extrair o valor correto
+function getTextValue(val: any): string {
+  if (typeof val === 'string') return val;
+  if (val && typeof val === 'object' && val['#text']) return String(val['#text']);
+  return '';
+}
+
 // Funções de extração para dados parseados com XMLParser
 export function extractPistas(data: any): string {
   try {
@@ -134,14 +148,6 @@ export function extractPistas(data: any): string {
 
     const runway = Array.isArray(runways) ? runways[0] : runways;
     if (!runway) return 'N/A';
-
-    // XMLParser com elementos que têm atributos retorna {"#text": "valor", "@_attr": "..."}
-    // Extrair o valor correto
-    const getTextValue = (val: any): string => {
-      if (typeof val === 'string') return val;
-      if (val && typeof val === 'object' && val['#text']) return String(val['#text']);
-      return '';
-    };
 
     const ident = runway['@_ident'] || runway.ident;
     const length = getTextValue(runway.length);
@@ -157,6 +163,102 @@ export function extractPistas(data: any): string {
     return 'N/A';
   } catch (e) {
     console.error(`[extractPistas] ❌ Erro:`, e);
+    return 'N/A';
+  }
+}
+
+/**
+ * Código de resistência do pavimento (ACN/PCN), ex: "54/F/A/X/T".
+ * Ver referência: memória "Guia de legendas do ROTAER" (seção 5).
+ */
+export function extractAcnPcn(data: any): string {
+  try {
+    if (!data || typeof data === 'string') return 'N/A';
+
+    const runways = data?.aisweb?.runways?.runway;
+    if (!runways) return 'N/A';
+
+    const runway = Array.isArray(runways) ? runways[0] : runways;
+    if (!runway) return 'N/A';
+
+    const acnPcn = getTextValue(runway.surface_c);
+    return acnPcn || 'N/A';
+  } catch (e) {
+    console.error(`[extractAcnPcn] ❌ Erro:`, e);
+    return 'N/A';
+  }
+}
+
+const TIPO_OPERACAO_DESCRICAO: Record<string, string> = {
+  'VFR IFR': 'VFR dia/noite + IFR dia/noite',
+  'IFR': 'VFR dia + IFR dia/noite',
+  'IFR DIURNA': 'VFR dia + IFR dia',
+  'VFR IFR DIURNA': 'VFR dia/noite + IFR dia',
+  'VFR': 'VFR dia/noite',
+};
+
+/**
+ * Tipo de operação do aeródromo (VFR/IFR), ex: "VFR IFR".
+ * Ver referência: memória "Guia de legendas do ROTAER" (seção 3).
+ */
+export function extractTipoOperacao(data: any): string {
+  try {
+    if (!data || typeof data === 'string') return 'N/A';
+
+    const tipoOperacao = getTextValue(data?.aisweb?.typeOpr) || data?.aisweb?.typeOpr;
+    if (!tipoOperacao || typeof tipoOperacao !== 'string') return 'N/A';
+
+    const descricao = TIPO_OPERACAO_DESCRICAO[tipoOperacao.trim()];
+    return descricao ? `${tipoOperacao} (${descricao})` : tipoOperacao;
+  } catch (e) {
+    console.error(`[extractTipoOperacao] ❌ Erro:`, e);
+    return 'N/A';
+  }
+}
+
+/**
+ * PAPI (luz L9 da tabela de iluminação) por cabeceira de pista.
+ * Ver referência: memória "Guia de legendas do ROTAER" (seção 6).
+ */
+export function extractPapi(data: any): string {
+  try {
+    if (!data || typeof data === 'string') return 'N/A';
+
+    const runways = data?.aisweb?.runways?.runway;
+    if (!runways) return 'N/A';
+
+    const runwaysArray = Array.isArray(runways) ? runways : [runways];
+    const resultados: string[] = [];
+
+    runwaysArray.forEach((runway: any) => {
+      const thrs = runway?.thr;
+      if (!thrs) return;
+
+      const thrsArray = Array.isArray(thrs) ? thrs : [thrs];
+
+      thrsArray.forEach((thr: any) => {
+        const cabeceira = getTextValue(thr?.ident) || thr?.ident;
+        if (!cabeceira) return;
+
+        const lightsRaw = thr?.lights?.light;
+        if (!lightsRaw) {
+          resultados.push(`${cabeceira}: —`);
+          return;
+        }
+
+        const lightsArray = Array.isArray(lightsRaw) ? lightsRaw : [lightsRaw];
+        const temPapi = lightsArray.some((light: any) => {
+          const codigo = typeof light === 'string' ? light : light?.['#text'];
+          return codigo === 'L9';
+        });
+
+        resultados.push(`${cabeceira}: ${temPapi ? 'PAPI' : '—'}`);
+      });
+    });
+
+    return resultados.length > 0 ? resultados.join(' · ') : 'N/A';
+  } catch (e) {
+    console.error(`[extractPapi] ❌ Erro:`, e);
     return 'N/A';
   }
 }

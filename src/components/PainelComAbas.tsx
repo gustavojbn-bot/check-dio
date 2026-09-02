@@ -336,8 +336,11 @@ function PainelAeroportoTab({ aeroporto }: { aeroporto: PontoAeroporto }) {
       ) : (
         <>
           <DataRow label="Pistas" value={rotaer?.pistas ? String(rotaer.pistas) : 'N/A'} />
+          <DataRow label="Tipo Operação" value={rotaer?.tipoOperacao ? String(rotaer.tipoOperacao) : 'N/A'} />
+          <DataRow label="ACN/PCN" value={rotaer?.acnPcn ? String(rotaer.acnPcn) : 'N/A'} />
           <DataRow label="Frequências" value={rotaer?.frequencias && Array.isArray(rotaer.frequencias) ? rotaer.frequencias.join(', ') : 'N/A'} />
           <DataRow label="Auxílios à Navegação" value={rotaer?.navAids ? String(rotaer.navAids) : 'N/A'} />
+          <DataRow label="PAPI" value={rotaer?.papi ? String(rotaer.papi) : 'N/A'} />
           <DataRow label="Iluminação" value={rotaer?.iluminacao ? 'Sim' : 'Não'} />
           <DataRow label="Combustível" value={rotaer?.combustivel && Array.isArray(rotaer.combustivel) ? rotaer.combustivel.join(', ') : 'N/A'} />
           <DataRow label="Serviços" value={rotaer?.servicos && Array.isArray(rotaer.servicos) ? rotaer.servicos.join(', ') : 'N/A'} />
