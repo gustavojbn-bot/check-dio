@@ -1,5 +1,6 @@
 import { useState, type CSSProperties, type FormEvent } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { TrocarSenhaLogin } from './TrocarSenhaLogin';
 
 export function Login() {
   const { signIn } = useAuth();
@@ -7,6 +8,7 @@ export function Login() {
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [modo, setModo] = useState<'login' | 'alterar-senha'>('login');
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -20,6 +22,25 @@ export function Login() {
     }
     setEnviando(false);
   };
+
+  if (modo === 'alterar-senha') {
+    return (
+      <div
+        style={{
+          width: '100%',
+          height: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#0f0f1e',
+          gap: 16,
+        }}
+      >
+        <TrocarSenhaLogin onVoltar={() => setModo('login')} />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -113,6 +134,23 @@ export function Login() {
           }}
         >
           {enviando ? 'Entrando...' : 'Entrar'}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setModo('alterar-senha')}
+          style={{
+            padding: '6px 10px',
+            borderRadius: 6,
+            border: 'none',
+            background: 'transparent',
+            color: '#06b6d4',
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          Alterar senha
         </button>
       </form>
 

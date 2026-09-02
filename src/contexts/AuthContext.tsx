@@ -82,16 +82,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const alterarSenha = async (novaSenha: string) => {
-    const { error: authError } = await supabase.auth.updateUser({ password: novaSenha });
+    const { data, error: authError } = await supabase.auth.updateUser({ password: novaSenha });
     if (authError) {
       return { error: traduzErroSenha(authError.message) };
     }
 
-    if (session?.user) {
+    // Usa o usuário retornado por updateUser (sempre atualizado) em vez do
+    // `session` do estado do contexto, que pode ainda estar desatualizado
+    // logo após um signIn (ex: fluxo de "Alterar senha" na tela de login).
+    const userId = data.user?.id;
+    if (userId) {
       const { error: perfilError } = await supabase
         .from('perfis')
         .update({ senha_provisoria: false })
-        .eq('id', session.user.id);
+        .eq('id', userId);
 
       if (perfilError) {
         console.error('%c[AuthContext] ❌ Erro ao limpar senha_provisoria:', 'color: #ef4444', perfilError);
