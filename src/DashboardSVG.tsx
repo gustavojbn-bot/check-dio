@@ -3,6 +3,7 @@ import { MapaSPSVG } from './components/MapaSPSVG';
 import { useAeroportosFromBD } from './hooks/useAeroportosFromBD';
 import { PainelComAbas } from '@/components/PainelComAbas';
 import { EmConstrucao } from '@/components/EmConstrucao';
+import { OcorrenciasScreen } from '@/components/ocorrencias/OcorrenciasScreen';
 import { MapaHeader } from '@/components/MapaHeader';
 import { LegendaMetar } from '@/components/LegendaMetar';
 import { UltimaAtualizacao } from '@/components/UltimaAtualizacao';
@@ -17,6 +18,7 @@ export default function DashboardSVG({ activeTab, activeMenuItem }: DashboardSVG
   console.log('%c🟢 DashboardSVG renderizado', 'color: lime; font-weight: bold');
 
   const isPainelOperacao = activeTab === 'operacao' && activeMenuItem === 'Painel';
+  const isOcorrencias = activeTab === 'operacao' && activeMenuItem === 'Ocorrências';
   const isMobile = useIsMobile();
 
   const [selectedAeroporto, setSelectedAeroporto] = useState<any>(null);
@@ -79,6 +81,8 @@ export default function DashboardSVG({ activeTab, activeMenuItem }: DashboardSVG
                 <LegendaMetar />
               </div>
             </>
+          ) : isOcorrencias ? (
+            <OcorrenciasScreen />
           ) : (
             <EmConstrucao label={activeMenuItem ?? ''} />
           )}
