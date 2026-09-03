@@ -3,7 +3,10 @@ import { MapaSPSVG } from './components/MapaSPSVG';
 import { useAeroportosFromBD } from './hooks/useAeroportosFromBD';
 import { PainelComAbas } from '@/components/PainelComAbas';
 import { EmConstrucao } from '@/components/EmConstrucao';
-import { OcorrenciasScreen } from '@/components/ocorrencias/OcorrenciasScreen';
+import { OcorrenciasCentro } from '@/components/ocorrencias/OcorrenciasCentro';
+import { OcorrenciasListaPanel } from '@/components/ocorrencias/OcorrenciasListaPanel';
+import { OcorrenciaFormDialog } from '@/components/ocorrencias/OcorrenciaFormDialog';
+import { useOcorrenciasModule } from '@/hooks/useOcorrenciasModule';
 import { MapaHeader } from '@/components/MapaHeader';
 import { LegendaMetar } from '@/components/LegendaMetar';
 import { UltimaAtualizacao } from '@/components/UltimaAtualizacao';
@@ -40,6 +43,8 @@ export default function DashboardSVG({ activeTab, activeMenuItem }: DashboardSVG
 
   // Busca dados dos aeroportos
   const { data: aeroportos = [], isLoading: aeroportosLoading } = useAeroportosFromBD();
+
+  const ocorrenciasModule = useOcorrenciasModule(isOcorrencias);
 
   return (
     <div style={{
@@ -82,7 +87,7 @@ export default function DashboardSVG({ activeTab, activeMenuItem }: DashboardSVG
               </div>
             </>
           ) : isOcorrencias ? (
-            <OcorrenciasScreen />
+            <OcorrenciasCentro modulo={ocorrenciasModule} />
           ) : (
             <EmConstrucao label={activeMenuItem ?? ''} />
           )}
@@ -122,6 +127,8 @@ export default function DashboardSVG({ activeTab, activeMenuItem }: DashboardSVG
               <PainelComAbas
                 selectedAeroporto={selectedAeroporto}
               />
+            ) : isOcorrencias ? (
+              <OcorrenciasListaPanel modulo={ocorrenciasModule} />
             ) : (
               <EmConstrucao label={activeMenuItem ?? ''} compact />
             )}
@@ -192,6 +199,14 @@ export default function DashboardSVG({ activeTab, activeMenuItem }: DashboardSVG
           )}
         </div>
       </div>
+
+      {isOcorrencias && ocorrenciasModule.dialogAberto && (
+        <OcorrenciaFormDialog
+          ocorrenciaId={ocorrenciasModule.ocorrenciaSelecionadaId}
+          onClose={ocorrenciasModule.fecharDialog}
+          onSalvo={() => ocorrenciasModule.refetch()}
+        />
+      )}
     </div>
   );
 }
